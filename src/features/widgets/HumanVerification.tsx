@@ -26,6 +26,9 @@ import {
     humanityIndexToPercentage 
 } from '../../services/humanityIndexCalculator';
 
+// Import logger
+import { matrixLogger } from '@/utils/logger';
+
 interface HumanVerificationProps {
     onClose?: () => void;
     onComplete?: (score: number) => void;
@@ -155,9 +158,20 @@ export const HumanVerification: React.FC<HumanVerificationProps> = ({
             )
         };
         
-        // Update global state
-        updateMatrixData(updatedMatrixData);
-        setHumanityScore(newHumanityIndex);
+        matrixLogger.debug('Updating matrix data with new unlockedAt', {
+            traitId: '00',
+            newUnlockedAt: updatedMatrixData.traits.find(t => t.id === '00')?.unlockedAt,
+            newHumanityIndex,
+            timestamp: Date.now()
+        });
+        
+        // Delay the matrix update to ensure TwinMatrixCard is rendered first
+        setTimeout(() => {
+            // Update global state
+            updateMatrixData(updatedMatrixData);
+            setHumanityScore(newHumanityIndex);
+            matrixLogger.info('Matrix data updated, animation should trigger now');
+        }, 800); // Wait for TwinMatrixCard to render
 
         // Return to options list (user can do more verifications)
         setTimeout(() => {

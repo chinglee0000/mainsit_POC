@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { GlobalDashboardWidget } from '../../widgets';
+import { logger } from '@/utils/logger';
 
 export const DashboardView: React.FC = () => {
     return (
@@ -23,7 +24,7 @@ export const DashboardView: React.FC = () => {
             </h2>
             <GlobalDashboardWidget
                 onViewTask={(taskId) => {
-                    console.log(`Viewing task: ${taskId}`);
+                    logger.debug(`Viewing task: ${taskId}`);
                 }}
             />
         </div>

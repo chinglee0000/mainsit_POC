@@ -13,6 +13,7 @@ import { DevConsole, devLog, ActiveTaskWidget, GlobalDashboardWidget, HumanVerif
 import { RecaptchaWidget } from '../widgets/RecaptchaModal';
 import { ImmersiveIntro } from '../../components/ImmersiveIntro';
 import { useMatrixData, useUpdateMatrixData } from '../../store/appStore';
+import { matrixLogger } from '@/utils/logger';
 
 import { Sidebar, QuickActionsPanel, ChatHeader, ChatInput } from './components';
 import { MatrixView } from './views/MatrixView';
@@ -44,6 +45,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
     const updateMatrixData = useUpdateMatrixData();
 
     const scrollRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const hasStarted = useRef(false);
 
@@ -63,39 +65,60 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
         
         const lastMessage = messages[messages.length - 1];
         
-        // If the last message is not a widget, return scrollRef (existing behavior)
-        if (lastMessage.type !== 'widget') {
-            return scrollRef.current;
-        }
-        
-        // Last message is a widget - find the preceding non-widget message
-        // Iterate backward through messages array
-        for (let i = messages.length - 2; i >= 0; i--) {
-            const message = messages[i];
-            
-            // Find the first message where type !== 'widget'
-            if (message.type !== 'widget') {
-                // Use document.querySelector with data-message-id to get the DOM element
-                const element = document.querySelector(`[data-message-id="${message.id}"]`);
+        // If the last message is a widget, find the preceding text message
+        if (lastMessage.type === 'widget') {
+            // Iterate backward through messages array to find the last text message
+            for (let i = messages.length - 2; i >= 0; i--) {
+                const message = messages[i];
                 
-                // Return the found element or scrollRef.current as fallback
-                if (element) {
-                    return element as HTMLElement;
+                // Find the first text message before the widget
+                if (message.type === 'text') {
+                    // Use document.querySelector with data-message-id to get the DOM element
+                    const element = document.querySelector(`[data-message-id="${message.id}"]`);
+                    
+                    // Return the found element or scrollRef.current as fallback
+                    if (element) {
+                        return element as HTMLElement;
+                    }
                 }
             }
         }
         
-        // No preceding non-widget message found, return scrollRef as fallback
+        // If last message is text, scroll to it
+        if (lastMessage.type === 'text') {
+            const element = document.querySelector(`[data-message-id="${lastMessage.id}"]`);
+            if (element) {
+                return element as HTMLElement;
+            }
+        }
+        
+        // Fallback to scrollRef
         return scrollRef.current;
     };
 
     useEffect(() => {
-        // Only scroll if we have more than just welcome message to avoid auto-scroll on landing
-        // This ensures the user stays at the top/welcome message when first opening the app
-        if (scrollRef.current && messages.length > 1) {
+        // Skip auto-scroll on initial load (only welcome message)
+        if (messages.length <= 1) {
+            return;
+        }
+        
+        // Scroll to the appropriate target when messages change
+        if (scrollContainerRef.current && messages.length > 0) {
             const scrollTarget = determineScrollTarget(messages, scrollRef as React.RefObject<HTMLDivElement>);
             if (scrollTarget) {
-                scrollTarget.scrollIntoView({ behavior: 'smooth' });
+                // Calculate the position to scroll to within the container
+                const container = scrollContainerRef.current;
+                const targetRect = scrollTarget.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                // Calculate scroll position: current scroll + target position - container top - 16px padding
+                const scrollPosition = container.scrollTop + (targetRect.top - containerRect.top) - 16;
+                
+                // Smooth scroll to the calculated position
+                container.scrollTo({
+                    top: scrollPosition,
+                    behavior: 'smooth'
+                });
             }
         }
     }, [messages, isTyping, suggestions]);
@@ -170,9 +193,6 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                 timestamp: Date.now(),
             };
 
-            setMessages(prev => [...prev, aiMsg]);
-            setSuggestions(node.suggestedActions || []);
-
             // Handle widget rendering - add as inline chat message
             if (node.response.widget) {
                 const widgetMsg: Message = {
@@ -183,9 +203,15 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                     widget: node.response.widget,
                     timestamp: Date.now(),
                 };
-                setMessages(prev => [...prev, widgetMsg]);
+                // Add both messages in a single state update to prevent double-render
+                setMessages(prev => [...prev, aiMsg, widgetMsg]);
                 devLog('info', `Rendering inline widget: ${node.response.widget}`);
+            } else {
+                // No widget, just add the text message
+                setMessages(prev => [...prev, aiMsg]);
             }
+            
+            setSuggestions(node.suggestedActions || []);
             devLog('success', `Matched node: ${node.id}`);
         } else if (input && isAIEnabled()) {
             // Use Gemini AI for unmatched queries
@@ -396,7 +422,6 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                     }}
                     quickActions={quickActions}
                     onQuickAction={handleAction}
-                    hasBanner={showCommunityToast}
                 />
 
                 {/* Main Area */}
@@ -418,11 +443,15 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                     />
 
                     {/* Content Area */}
-                    <div style={{
-                        flex: 1,
-                        overflow: 'auto',
-                        padding: '16px'
-                    }} className="scrollbar-hide">
+                    <div 
+                        ref={scrollContainerRef}
+                        style={{
+                            flex: 1,
+                            overflow: 'auto',
+                            padding: '16px'
+                        }} 
+                        className="scrollbar-hide"
+                    >
                         {activeTab === 'chat' && (
                             <div style={{ maxWidth: '900px', margin: '0 auto' }}>
                             {messages.map((msg) => {
@@ -440,6 +469,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                                                 <h1 style={{
                                                     fontSize: 'clamp(32px, 5vw, 40px)',
                                                     fontWeight: 500,
+                                                    fontFamily: 'Montserrat, sans-serif',
                                                     color: 'var(--color-text-primary)',
                                                     marginBottom: '16px',
                                                     lineHeight: '1.1',
@@ -721,14 +751,20 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                 // Widget messages - render inline
                                 if (msg.type === 'widget') {
+                                    const isMobile = window.innerWidth < 768;
+                                    const widgetContainerStyle: React.CSSProperties = {
+                                        marginBottom: '24px',
+                                        display: 'flex',
+                                        justifyContent: isMobile ? 'center' : 'flex-start',
+                                        width: '100%',
+                                        contain: 'layout',
+                                        willChange: 'auto',
+                                    };
+
                                     if (msg.widget === 'twin_matrix') {
                                         // Matrix data is now managed globally in appStore
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <TwinMatrixCard
                                                     onExplore={() => {
                                                         devLog('success', 'Boost Your Score clicked');
@@ -741,11 +777,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'active_task') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <ActiveTaskWidget
                                                     onVerify={(url) => {
                                                         devLog('success', `Task submitted: ${url}`);
@@ -756,18 +788,16 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                                     }
                                     if (msg.widget === 'global_dashboard') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start',
-                                                width: '100%',
+                                            <div key={msg.id} data-message-id={msg.id} style={{
+                                                ...widgetContainerStyle,
                                                 maxWidth: '400px'
                                             }}>
                                                 <GlobalDashboardWidget
                                                     onViewTask={(taskId) => {
                                                         devLog('info', `Viewing task: ${taskId}`);
-                                                        // Allow clicking dashboard item to open Active Task
-                                                        triggerResponse(null, 'accept_task', false); // Demo hack to show task
+                                                        // TODO: Replace with proper task navigation when task routing is implemented
+                                                        // Currently triggers accept_task flow as a demo placeholder
+                                                        triggerResponse(null, 'accept_task', false);
                                                     }}
                                                 />
                                             </div>
@@ -776,11 +806,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'wallet_binding') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <WalletBindingWidget
                                                     onBindingComplete={(addr, type) => {
                                                         devLog('success', `Binding Complete: ${type} — ${addr}`);
@@ -793,11 +819,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'recaptcha') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <RecaptchaWidget
                                                     onStart={() => {
                                                         setIsCaptchaActive(true);
@@ -808,8 +830,8 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                                                         setIsVerified(true);
                                                         setIsCaptchaActive(false);
                                                         
-                                                        console.log('🔄 Starting matrix update...');
-                                                        console.log('📊 Current matrix data:', {
+                                                        matrixLogger.info('Starting matrix update...');
+                                                        matrixLogger.debug('Current matrix data:', {
                                                             discoveredTraits: matrixData.discoveredTraits,
                                                             trait00: matrixData.traits.find(t => t.id === '00')
                                                         });
@@ -846,7 +868,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                                                             recentlyUnlockedTrait: '00'
                                                         };
                                                         
-                                                        console.log('✅ Updated matrix data:', {
+                                                        matrixLogger.info('Updated matrix data:', {
                                                             discoveredTraits: updatedMatrixData.discoveredTraits,
                                                             trait00: updatedMatrixData.traits.find(t => t.id === '00'),
                                                             recentlyUnlockedTrait: updatedMatrixData.recentlyUnlockedTrait
@@ -855,7 +877,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                                                         // Update global store using the hook
                                                         updateMatrixData(updatedMatrixData);
                                                         
-                                                        console.log('💾 Store update called');
+                                                        matrixLogger.debug('Store update called');
                                                         
                                                         // Trigger verification success message
                                                         triggerResponse(null, 'verification_success', false);
@@ -889,11 +911,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'human_verification') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <HumanVerification
                                                     onComplete={(score) => {
                                                         devLog('success', `Verification Complete. Score: ${score}`);
@@ -938,11 +956,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'airdrop_claim') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <AirdropClaimCard
                                                     score={51}
                                                     threshold={100}
@@ -960,11 +974,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'reward_dashboard') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <RewardDashboard
                                                     balance={500}
                                                     onInvite={() => {
@@ -980,11 +990,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'invite_friends') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <InviteFriendsCard />
                                             </div>
                                         );
@@ -992,11 +998,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'community_preview') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <CommunityPreview
                                                     onJoinCommunity={() => {
                                                         devLog('info', 'Join Community clicked');
@@ -1011,11 +1013,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
 
                                     if (msg.widget === 'airdrop_task_dashboard') {
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <AirdropTaskDashboard
                                                     matrixScore={matrixData.humanityIndex}
                                                     onAllTasksComplete={(totalScore, totalReward) => {
@@ -1034,11 +1032,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = () => {
                                         const finalReward = parseInt(sessionStorage.getItem('finalReward') || '0');
                                         const finalScore = parseInt(sessionStorage.getItem('finalScore') || '0');
                                         return (
-                                            <div key={msg.id} data-message-id={msg.id} className="animate-fade-in" style={{
-                                                marginBottom: '24px',
-                                                display: 'flex',
-                                                justifyContent: 'flex-start'
-                                            }}>
+                                            <div key={msg.id} data-message-id={msg.id} style={widgetContainerStyle}>
                                                 <FinalRewardDashboard
                                                     matrixScore={finalScore}
                                                     tokenAmount={finalReward}

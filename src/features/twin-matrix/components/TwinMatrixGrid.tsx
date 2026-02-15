@@ -9,6 +9,7 @@ import { Lock, Calendar, Unlock } from 'lucide-react';
 import type { TwinMatrixData, MatrixTrait } from '../types';
 import { MatrixTooltip } from './MatrixTooltip';
 import { getTraitColor, isRecentlyUnlocked, type MatrixDimension } from '../colorSystem';
+import { matrixLogger } from '@/utils/logger';
 
 const DIMENSION_COLORS = {
     physical: '#D02800',
@@ -32,7 +33,7 @@ export function TwinMatrixGrid({ data, onCellClick, isTouchDevice }: TwinMatrixG
     const animatedTraitsRef = useRef<Set<string>>(new Set());
 
     useEffect(() => {
-        console.log('🔍 TwinMatrixGrid: Checking for unlock animations', {
+        matrixLogger.debug('Checking for unlock animations', {
             totalTraits: data.traits.length,
             discoveredTraits: data.traits.filter(t => t.discovered).length,
             recentlyUnlockedTrait: data.recentlyUnlockedTrait
@@ -42,41 +43,46 @@ export function TwinMatrixGrid({ data, onCellClick, isTouchDevice }: TwinMatrixG
         data.traits.forEach(trait => {
             if (trait.discovered && 
                 trait.unlockedAt && 
-                isRecentlyUnlocked(trait.unlockedAt) &&
-                !animatedTraitsRef.current.has(trait.id)) {
+                isRecentlyUnlocked(trait.unlockedAt)) {
                 
-                // Mark as animated immediately to prevent double trigger
-                animatedTraitsRef.current.add(trait.id);
+                // Check if this specific unlockedAt timestamp has been animated
+                const animationKey = `${trait.id}-${trait.unlockedAt}`;
                 
-                const cellElement = cellRefs.current.get(trait.id);
-                if (cellElement) {
-                    console.log(`🎬 Triggering unlock animation for trait ${trait.id}`, {
-                        unlockedAt: trait.unlockedAt,
-                        isRecent: isRecentlyUnlocked(trait.unlockedAt),
-                        timeDiff: Date.now() - new Date(trait.unlockedAt).getTime(),
-                        element: cellElement
-                    });
+                if (!animatedTraitsRef.current.has(animationKey)) {
+                    // Mark as animated immediately to prevent double trigger
+                    animatedTraitsRef.current.add(animationKey);
                     
-                    // Add a pre-animation flash to draw attention
-                    cellElement.style.transition = 'none';
-                    cellElement.style.transform = 'scale(1.8)';
-                    cellElement.style.boxShadow = '0 0 60px rgba(255, 255, 255, 1)';
-                    
-                    // Start the main animation after a brief delay
-                    setTimeout(() => {
-                        cellElement.style.transition = '';
-                        cellElement.style.transform = '';
-                        cellElement.style.boxShadow = '';
-                        cellElement.classList.add('animate-trait-unlock');
-                    }, 100);
-                    
-                    // Remove animation class after it completes
-                    setTimeout(() => {
-                        cellElement.classList.remove('animate-trait-unlock');
-                        console.log(`✅ Animation completed for trait ${trait.id}`);
-                    }, 3600); // 3.5s animation + 100ms delay
-                } else {
-                    console.warn(`⚠️ Cell element not found for trait ${trait.id}`);
+                    const cellElement = cellRefs.current.get(trait.id);
+                    if (cellElement) {
+                        matrixLogger.debug(`Triggering unlock animation for trait ${trait.id}`, {
+                            unlockedAt: trait.unlockedAt,
+                            isRecent: isRecentlyUnlocked(trait.unlockedAt),
+                            timeDiff: Date.now() - new Date(trait.unlockedAt).getTime(),
+                            element: cellElement,
+                            animationKey
+                        });
+                        
+                        // Add a pre-animation flash to draw attention
+                        cellElement.style.transition = 'none';
+                        cellElement.style.transform = 'scale(1.8)';
+                        cellElement.style.boxShadow = '0 0 60px rgba(255, 255, 255, 1)';
+                        
+                        // Start the main animation after a brief delay
+                        setTimeout(() => {
+                            cellElement.style.transition = '';
+                            cellElement.style.transform = '';
+                            cellElement.style.boxShadow = '';
+                            cellElement.classList.add('animate-trait-unlock');
+                        }, 100);
+                        
+                        // Remove animation class after it completes
+                        setTimeout(() => {
+                            cellElement.classList.remove('animate-trait-unlock');
+                            matrixLogger.debug(`Animation completed for trait ${trait.id}`);
+                        }, 3600); // 3.5s animation + 100ms delay
+                    } else {
+                        console.warn(`⚠️ Cell element not found for trait ${trait.id}`);
+                    }
                 }
             }
         });
@@ -138,8 +144,10 @@ export function TwinMatrixGrid({ data, onCellClick, isTouchDevice }: TwinMatrixG
                 gap: isTouchDevice ? '2px' : '4px',
                 padding: 0,
                 background: 'transparent',
-                borderRadius: 'var(--radius-md, 12px)',
+                borderRadius: '0',
                 marginBottom: '10px',
+                willChange: 'transform',
+                contain: 'layout style paint',
             }}
         >
             {gridCells.map((trait, index) => (

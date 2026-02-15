@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
 import { getFlowConfig } from '../config/flowConfigs';
 import type { URLContext, UserStatus } from '../types/context';
+import { logger } from '../utils/logger';
 
 export function useContextResolver() {
     const {
@@ -67,8 +68,8 @@ export function useContextResolver() {
         const flowConfig = getFlowConfig(resolvedContextId);
         setCurrentStep(flowConfig.welcomeNodeId);
 
-        // Log for debugging (remove in production)
-        console.log('[ContextResolver] Initialized:', {
+        // Log for debugging
+        logger.debug('[ContextResolver] Initialized:', {
             urlParams: cleanParams,
             userStatus,
             contextId: resolvedContextId,
