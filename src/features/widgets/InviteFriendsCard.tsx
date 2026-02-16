@@ -30,7 +30,7 @@ export const InviteFriendsCard: React.FC<InviteFriendsCardProps> = ({
     };
 
     return (
-        <div className="card animate-fade-in" style={cardStyle}>
+        <div className="card" style={cardStyle}>
             {/* Header */}
             <div style={{
                 padding: '16px 20px',

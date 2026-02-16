@@ -10,7 +10,7 @@ import type { Message } from '../../../types';
 import type { Suggestion } from '../../../types/a2ui';
 import type { TaskOpportunityPayload } from '../../../types';
 import type { ContextId } from '../../../types/context';
-import { INTERACTION_INVENTORY } from '../../../data/inventory';
+import { INTERACTION_INVENTORY } from '../../../data/inventory/index';
 import { generateAgentResponse, isAIEnabled, generateSuggestions } from '../../../services/geminiService';
 import { devLog } from '../../widgets';
 

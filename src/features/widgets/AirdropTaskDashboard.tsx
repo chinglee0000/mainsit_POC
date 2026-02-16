@@ -137,17 +137,19 @@ export const AirdropTaskDashboard: React.FC<AirdropTaskDashboardProps> = ({
         }
     };
 
+    const cardStyle: React.CSSProperties = {
+        background: 'var(--glass-bg)',
+        border: '1px solid var(--glass-border)',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        width: '100%',
+        maxWidth: '480px',
+        margin: window.innerWidth < 768 ? '0 auto' : '0',
+    };
+
     return (
         <>
-            <div 
-                className="card animate-fade-in" 
-                style={{
-                    width: '100%',
-                    maxWidth: '480px',
-                    padding: 0,
-                    overflow: 'hidden',
-                }}
-            >
+            <div className="card" style={cardStyle}>
                 {/* Header */}
                 <div style={{
                     padding: '16px 20px 12px',
@@ -441,7 +443,7 @@ export const AirdropTaskDashboard: React.FC<AirdropTaskDashboardProps> = ({
 
                     {/* Upcoming Tasks Preview */}
                     {showPreview && (
-                        <div className="animate-slide-down" style={{
+                        <div style={{
                             marginTop: '8px',
                             padding: '16px',
                             borderRadius: '12px',
@@ -521,16 +523,6 @@ export const AirdropTaskDashboard: React.FC<AirdropTaskDashboardProps> = ({
                                             Check in daily for 7 consecutive days
                                         </div>
                                     </div>
-                                    <div style={{
-                                        padding: '4px 10px',
-                                        borderRadius: '6px',
-                                        background: 'rgba(255, 255, 255, 0.04)',
-                                        fontSize: '11px',
-                                        fontWeight: 500,
-                                        color: 'var(--color-text-dim)',
-                                    }}>
-                                        Coming Soon
-                                    </div>
                                 </div>
 
                                 {/* Upcoming Task 2 */}
@@ -573,16 +565,6 @@ export const AirdropTaskDashboard: React.FC<AirdropTaskDashboardProps> = ({
                                             Unlock 5 cells in your twin Matrix
                                         </div>
                                     </div>
-                                    <div style={{
-                                        padding: '4px 10px',
-                                        borderRadius: '6px',
-                                        background: 'rgba(255, 255, 255, 0.04)',
-                                        fontSize: '11px',
-                                        fontWeight: 500,
-                                        color: 'var(--color-text-dim)',
-                                    }}>
-                                        Coming Soon
-                                    </div>
                                 </div>
 
                                 {/* Upcoming Task 3 */}
@@ -624,16 +606,6 @@ export const AirdropTaskDashboard: React.FC<AirdropTaskDashboardProps> = ({
                                         }}>
                                             Join and participate in twin3 events
                                         </div>
-                                    </div>
-                                    <div style={{
-                                        padding: '4px 10px',
-                                        borderRadius: '6px',
-                                        background: 'rgba(255, 255, 255, 0.04)',
-                                        fontSize: '11px',
-                                        fontWeight: 500,
-                                        color: 'var(--color-text-dim)',
-                                    }}>
-                                        Coming Soon
                                     </div>
                                 </div>
                             </div>

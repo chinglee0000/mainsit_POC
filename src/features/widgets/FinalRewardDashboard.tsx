@@ -40,7 +40,7 @@ export const FinalRewardDashboard: React.FC<FinalRewardDashboardProps> = ({
 
     return (
         <div 
-            className="card animate-fade-in" 
+            className="card" 
             style={{
                 width: '100%',
                 maxWidth: '480px',

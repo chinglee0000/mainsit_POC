@@ -917,13 +917,16 @@ export const WalletBindingWidget: React.FC<WalletBindingWidgetProps> = ({
                     </div>
 
                     <div style={{
-                        fontSize: '12px',
+                        fontSize: window.innerWidth < 768 ? '11px' : '12px',
                         fontFamily: 'monospace',
                         color: 'var(--color-text-secondary)',
                         padding: '8px 12px',
                         background: 'rgba(255, 255, 255, 0.04)',
                         borderRadius: '8px',
                         marginBottom: '16px',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'break-word',
+                        maxWidth: '100%',
                     }}>
                         {bindingType === 'self-custody'
                             ? MOCK_FULL_ADDRESS

@@ -117,24 +117,26 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                             {formatTokenBalance(tokenBalance)} $twin3
                         </span>
 
-                        {/* Avatar - Always visible */}
-                        <div style={{
-                            width: isMobile ? '28px' : '32px',
-                            height: isMobile ? '28px' : '32px',
-                            borderRadius: '50%',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                        }}>
-                            <img 
-                                src={userAvatar} 
-                                alt="User Avatar"
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                }}
-                            />
-                        </div>
+                        {/* Avatar - Hidden on mobile (< 768px) */}
+                        {!isMobile && (
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                            }}>
+                                <img 
+                                    src={userAvatar} 
+                                    alt="User Avatar"
+                                    style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                    }}
+                                />
+                            </div>
+                        )}
 
                         {/* Wallet Address - Hidden on mobile (< 768px) */}
                         {!isMobile && (

@@ -80,6 +80,7 @@ export const TwinMatrixCard: React.FC<TwinMatrixCardProps> = ({ onExplore }) => 
             style={{
                 width: '100%',
                 maxWidth: '480px',
+                minHeight: '600px',
                 padding: 0,
                 overflow: 'visible',
             }}

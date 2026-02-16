@@ -11,13 +11,27 @@ export const verificationNodes: InteractionNode[] = [
         id: 'verify_human',
         triggers: ['verify', 'verification', 'prove', 'human'],
         response: {
-            text: "**Verify Humanity**\nSelect a verification method to prove you are human and unlock the Twin Matrix. The Humanity Index measures the likelihood that you are a real person and is the fundamental building block of trust in the decentralised community.",
+            text: "**Connect Your Identity**\nFirst, let's bind your account. Choose a wallet connection method to get started.",
             delay: 500,
-            widget: 'human_verification'
+            widget: 'wallet_binding'
         },
         suggestedActions: [
             { label: 'What is SBT?', payload: 'sbt_info' },
             { label: 'Why Verify Humanity?', payload: 'why_verify' }
+        ]
+    },
+
+    {
+        id: 'binding_success',
+        triggers: [],
+        response: {
+            text: "**Verify Humanity**\nGreat! Your identity is bound. Before your SBT can be minted, we need a quick verification to confirm you're a real human.",
+            delay: 500,
+            widget: 'recaptcha'
+        },
+        suggestedActions: [
+            { label: 'Why Verify Humanity?', payload: 'why_verify' },
+            { label: 'What is SBT?', payload: 'sbt_info' }
         ]
     },
 

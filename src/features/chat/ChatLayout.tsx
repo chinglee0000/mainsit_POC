@@ -7,7 +7,7 @@ import type { ContextId } from '../../types/context';
 import { MessageBubble } from './MessageBubble';
 import { TaskDetailModal } from '../twin-matrix/components/TaskDetailModal';
 import { TwinMatrixCard } from '../twin-matrix/TwinMatrixCard';
-import { INTERACTION_INVENTORY } from '../../data/inventory';
+import { INTERACTION_INVENTORY } from '../../data/inventory/index';
 import { generateAgentResponse, isAIEnabled, generateSuggestions } from '../../services/geminiService';
 import { DevConsole, devLog, ActiveTaskWidget, GlobalDashboardWidget, HumanVerification, WalletBindingWidget, AirdropClaimCard, RewardDashboard, InviteFriendsCard, CommunityPreview, AirdropTaskDashboard, FinalRewardDashboard, CommunityStatsToast, WelcomeMemberModal } from '../widgets';
 import { RecaptchaWidget } from '../widgets/RecaptchaModal';

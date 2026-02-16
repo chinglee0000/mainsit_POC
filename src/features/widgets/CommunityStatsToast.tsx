@@ -30,6 +30,8 @@ export const CommunityStatsToast: React.FC<CommunityStatsToastProps> = ({
         return num.toLocaleString('en-US');
     };
 
+    const isMobile = window.innerWidth < 768;
+
     return (
         <div
             style={{
@@ -38,18 +40,21 @@ export const CommunityStatsToast: React.FC<CommunityStatsToastProps> = ({
                 maxHeight: isVisible && !isClosing ? '50px' : '0',
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 overflow: 'hidden',
+                position: 'relative',
+                zIndex: 100,
+                flexShrink: 0,
             }}
         >
             <div
                 style={{
                     width: '100%',
-                    padding: '12px 16px',
+                    padding: isMobile ? '10px 12px' : '12px 16px',
                     background: '#ffffff',
                     borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '12px',
+                    gap: isMobile ? '8px' : '12px',
                     position: 'relative',
                 }}
             >
@@ -57,34 +62,27 @@ export const CommunityStatsToast: React.FC<CommunityStatsToastProps> = ({
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    flex: 1,
                     justifyContent: 'center',
-                    flexWrap: 'wrap',
+                    gap: isMobile ? '6px' : '8px',
+                    flex: 1,
+                    minWidth: 0,
                 }}>
                     <span style={{
-                        fontSize: window.innerWidth < 768 ? '14px' : '15px',
-                        fontWeight: 500,
-                        color: '#374151', // gray-700
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
+                        fontWeight: 700,
+                        fontSize: isMobile ? '20px' : '22px',
+                        fontFamily: 'var(--font-sans)',
+                        color: '#000000',
+                        whiteSpace: 'nowrap',
                     }}>
-                        <span style={{
-                            fontWeight: 700,
-                            fontSize: window.innerWidth < 768 ? '18px' : '20px',
-                            fontFamily: 'var(--font-sans)',
-                            color: '#000000',
-                        }}>
-                            {formatNumber(memberCount)}
-                        </span>
-                        verified members have joined
-                        <span style={{
-                            fontWeight: 600,
-                            color: '#000000',
-                        }}>
-                            twin3.ai
-                        </span>
+                        {formatNumber(memberCount)}
+                    </span>
+                    <span style={{
+                        fontSize: isMobile ? '14px' : '15px',
+                        fontWeight: 500,
+                        color: '#374151',
+                        whiteSpace: 'nowrap',
+                    }}>
+                        verified members
                     </span>
                 </div>
 

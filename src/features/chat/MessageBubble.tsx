@@ -17,12 +17,28 @@ const parseMarkdown = (text: string): string => {
         .replace(/\n/g, '<br/>');
 };
 
+/**
+ * MessageBubble Component
+ * 
+ * IMPORTANT: This component does NOT use animation classes (animate-fade-in, etc.)
+ * 
+ * Reason: Transform animations cause visual "drift" or "shift" with text content,
+ * especially with:
+ * - Long text (100+ characters)
+ * - Multi-line content
+ * - Dynamic content loading
+ * - Different browser text rendering
+ * 
+ * Text messages should appear instantly without animation for the best UX.
+ * 
+ * See: .agent/rules/design-system.md - Animation Usage Guidelines
+ */
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
     const isUser = message.role === 'user';
     const parsedContent = parseMarkdown(message.content);
 
     return (
-        <div data-message-id={message.id} className="animate-fade-in" style={{
+        <div data-message-id={message.id} style={{
             display: 'flex',
             justifyContent: isUser ? 'flex-end' : 'flex-start',
             marginBottom: '16px',

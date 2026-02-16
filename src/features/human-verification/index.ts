@@ -24,8 +24,7 @@ export {
     travelKOLInfo,
 } from '../../data/profiles/mockProfiles';
 
-
 // Components
 export { VerificationOptions } from './components/VerificationOptions';
 export { VerificationLoader } from './components/VerificationLoader';
-export { HumanityStatusCard } from './components/HumanityStatusCard';
+

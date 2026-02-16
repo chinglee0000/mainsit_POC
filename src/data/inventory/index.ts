@@ -10,6 +10,8 @@ import type { InteractionInventory } from '../../types/a2ui';
 import { welcomeNodes } from './welcomeNodes';
 import { verificationNodes } from './verificationNodes';
 import { taskNodes } from './taskNodes';
+import { rewardNodes } from './rewardNodes';
+import { faqNodes } from './faqNodes';
 import { infoNodes, fallbackNode } from './infoNodes';
 
 // Combine all nodes
@@ -17,6 +19,8 @@ export const INTERACTION_INVENTORY: InteractionInventory = [
     ...welcomeNodes,
     ...verificationNodes,
     ...taskNodes,
+    ...rewardNodes,
+    ...faqNodes,
     ...infoNodes,
     fallbackNode,
 ];
@@ -25,4 +29,6 @@ export const INTERACTION_INVENTORY: InteractionInventory = [
 export { welcomeNodes } from './welcomeNodes';
 export { verificationNodes } from './verificationNodes';
 export { taskNodes } from './taskNodes';
+export { rewardNodes } from './rewardNodes';
+export { faqNodes } from './faqNodes';
 export { infoNodes, fallbackNode } from './infoNodes';

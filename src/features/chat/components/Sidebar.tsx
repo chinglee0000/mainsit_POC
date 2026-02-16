@@ -17,7 +17,6 @@ interface SidebarProps {
     onReplayIntro: () => void;
     quickActions?: Array<{ icon: any; label: string; action: string }>;
     onQuickAction?: (actionId: string) => void;
-    hasBanner?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -28,11 +27,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onReplayIntro,
     quickActions = [],
     onQuickAction,
-    hasBanner = false,
 }) => {
     const isDesktop = window.innerWidth >= 1024;
     const isCollapsed = isDesktop && !isOpen;
-    const bannerHeight = hasBanner ? 50 : 0;
 
 
     return (
@@ -45,10 +42,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 flexDirection: 'column',
                 position: isDesktop ? 'relative' : 'fixed',
                 left: 0,
-                top: isDesktop ? 0 : bannerHeight,
-                height: isDesktop ? '100%' : `calc(100% - ${bannerHeight}px)`,
+                top: 0,
+                height: '100%',
                 zIndex: 40,
-                transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1), top 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 overflow: isOpen ? 'visible' : 'hidden',
                 borderRight: '1px solid var(--glass-border)',
             }}
